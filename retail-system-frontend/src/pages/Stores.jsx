@@ -16,6 +16,7 @@ import StoreForm from "../components/StoreForm";
 
 function Stores() {
 
+
     const [stores, setStores] = useState([]);
 
     const [loading, setLoading] = useState(true);
@@ -26,221 +27,230 @@ function Stores() {
 
     const [editingStore, setEditingStore] = useState(null);
 
+    const [submitting, setSubmitting] = useState(false);
+
+    const [deletingId, setDeletingId] = useState(null);
 
     const loadStores = useCallback(async () => {
 
-    try {
+        try {
 
-        setLoading(true);
-        setError("");
+            setLoading(true);
+            setError("");
 
-        const data = await getStores();
+            const data = await getStores();
 
-        setStores(data);
+            setStores(data);
 
-    } catch (error) {
+        } catch (error) {
 
-        console.error("Load stores error:", error);
+            console.error("Load stores error:", error);
 
-        setError("Failed to load stores.");
+            setError("Failed to load stores.");
 
-    } finally {
+        } finally {
 
-        setLoading(false);
-    }
+            setLoading(false);
+        }
 
-}, []);
+    }, []);
 
     // Load stores when component is mounted
     useEffect(() => {
         loadStores();
     }, [loadStores]);
 
-   const handleCreate = async (store) => {
+    const handleCreate = async (store) => {
 
-    try {
+        try {
 
-        setError("");
+            setError("");
 
-        const newStore = await createStore(store);
+            setSubmitting(true);
 
-        setStores((previousStores) => [
-            ...previousStores,
-            newStore
-        ]);
+            const newStore = await createStore(store);
 
-        setShowForm(false);
+            setStores((previousStores) => [
+                ...previousStores,
+                newStore
+            ]);
 
-    } catch (error) {
+            setShowForm(false);
 
-        console.error("Create store error:", error);
+        } catch (error) {
 
-        setError(
-            error.response?.data?.message ||
-            "Failed to create store."
-        );
-    }
-};
+            console.error(
+                "Create store error:",
+                error
+            );
+
+            setError(
+                error.response?.data?.message ||
+                "Failed to create store."
+            );
+
+        } finally {
+
+            setSubmitting(false);
+        }
+    };
 
 
     const handleUpdate = async (store) => {
 
-    try {
+        try {
 
-        setError("");
+            setError("");
 
-        const updatedStore = await updateStore(
-            editingStore.id,
-            store
-        );
+            setSubmitting(true);
 
-        setStores((previousStores) =>
-            previousStores.map((item) =>
-                item.id === updatedStore.id
-                    ? updatedStore
-                    : item
-            )
-        );
+            const updatedStore = await updateStore(
+                editingStore.id,
+                store
+            );
 
-        setEditingStore(null);
+            setStores((previousStores) =>
+                previousStores.map((item) =>
+                    item.id === updatedStore.id
+                        ? updatedStore
+                        : item
+                )
+            );
 
-    } catch (error) {
+            setEditingStore(null);
 
-        console.error("Update store error:", error);
+        } catch (error) {
 
-        setError(
-            error.response?.data?.message ||
-            "Failed to update store."
-        );
-    }
-};
+            console.error(
+                "Update store error:",
+                error
+            );
+
+            setError(
+                error.response?.data?.message ||
+                "Failed to update store."
+            );
+
+        } finally {
+
+            setSubmitting(false);
+        }
+    };
 
     const handleDelete = async (id) => {
 
-    const confirmed = window.confirm(
-        "Are you sure you want to delete this store?"
-    );
-
-    if (!confirmed) {
-        return;
-    }
-
-    try {
-
-        setError("");
-
-        await deleteStore(id);
-
-        setStores((previousStores) =>
-            previousStores.filter(
-                (store) => store.id !== id
-            )
+        const confirmed = window.confirm(
+            "Are you sure you want to delete this store?"
         );
 
-    } catch (error) {
+        if (!confirmed) {
+            return;
+        }
 
-        console.error("Delete store error:", error);
 
-        setError(
-            error.response?.data?.message ||
-            "Failed to delete store."
-        );
-    }
-};
+        try {
 
+            setError("");
+
+            setDeletingId(id);
+
+            await deleteStore(id);
+
+            setStores((previousStores) =>
+                previousStores.filter(
+                    (store) => store.id !== id
+                )
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Delete store error:",
+                error
+            );
+
+            setError(
+                error.response?.data?.message ||
+                "Failed to delete store."
+            );
+
+        } finally {
+
+            setDeletingId(null);
+        }
+    };
     if (loading) {
-    return (
-        <div className="loading">
-            <h2>Loading stores...</h2>
-        </div>
-    );
-}
+        return (
+            <div className="loading">
+                <h2>Loading stores...</h2>
+            </div>
+        );
+    }
 
 
     return (
-    <div className="store-page">
+        <div className="store-page">
 
-        {/* Header */}
-        <div className="store-header">
+            {/* Header */}
+            <div className="store-header">
 
-            <div>
-                <h1>Store Management</h1>
+                <div>
+                    <h1>Store Management</h1>
 
-                <p>
-                    Manage your retail stores and locations
-                </p>
+                    <p>
+                        Manage your retail stores and locations
+                    </p>
+                </div>
+
+                {/* Don't show Add Store button while form is open */}
+                {!showForm && !editingStore && (
+                    <button
+                        className="btn btn-primary"
+                        onClick={() => {
+                            setError("");
+                            setEditingStore(null);
+                            setShowForm(true);
+                        }}
+                    >
+                        + Add Store
+                    </button>
+                )}
+
             </div>
 
-            {/* Don't show Add Store button while form is open */}
-            {!showForm && !editingStore && (
-                <button
-                    className="btn btn-primary"
-                    onClick={() => {
-                        setError("");
-                        setEditingStore(null);
-                        setShowForm(true);
-                    }}
-                >
-                    + Add Store
-                </button>
+
+            {/* Error */}
+            {error && (
+                <div className="error-message">
+                    {error}
+                </div>
             )}
 
-        </div>
 
-
-        {/* Error */}
-        {error && (
-            <div className="error-message">
-                {error}
-            </div>
-        )}
-
-
-        {/* =========================
+            {/* =========================
             ADD / EDIT FORM
            ========================= */}
 
-        {(showForm || editingStore) ? (
+            {(showForm || editingStore) ? (
 
-            <div className="store-form-wrapper">
+                <div className="store-form-wrapper">
 
-                <div className="store-form-card">
+                    <div className="store-form-card">
 
-                    <StoreForm
-                        initialData={editingStore}
-                        onSubmit={
-                            editingStore
-                                ? handleUpdate
-                                : handleCreate
-                        }
-                        onCancel={() => {
-                            setShowForm(false);
-                            setEditingStore(null);
-                            setError("");
-                        }}
-                    />
-
-                </div>
-
-            </div>
-
-        ) : (
-
-            /* =========================
-               STORE TABLE
-               ========================= */
-
-            stores.length === 0 ? (
-
-                <div className="store-table-card">
-
-                    <div className="empty-state">
-
-                        <h3>No stores found</h3>
-
-                        <p>
-                            Start by adding your first store.
-                        </p>
+                        <StoreForm
+                            initialData={editingStore}
+                            onSubmit={
+                                editingStore
+                                    ? handleUpdate
+                                    : handleCreate
+                            }
+                            onCancel={() => {
+                                setShowForm(false);
+                                setEditingStore(null);
+                                setError("");
+                            }}
+                            submitting={submitting}
+                        />
 
                     </div>
 
@@ -248,26 +258,51 @@ function Stores() {
 
             ) : (
 
-                <div className="store-table-card">
+                /* =========================
+                   STORE TABLE
+                   ========================= */
 
-                    <StoreTable
-                        stores={stores}
-                        onEdit={(store) => {
-                            setError("");
-                            setShowForm(false);
-                            setEditingStore(store);
-                        }}
-                        onDelete={handleDelete}
-                    />
+                stores.length === 0 ? (
 
-                </div>
+                    <div className="store-table-card">
 
-            )
+                        <div className="empty-state">
 
-        )}
+                            <h3>No stores found</h3>
 
-    </div>
-);
+                            <p>
+                                Start by adding your first store.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                ) : (
+
+                    <div className="store-table-card">
+
+                        <StoreTable
+                            stores={stores}
+                            onEdit={(store) => {
+
+                                setError("");
+                                setShowForm(false);
+                                setEditingStore(store);
+
+                            }}
+                            onDelete={handleDelete}
+                            deletingId={deletingId}
+                        />
+
+                    </div>
+
+                )
+
+            )}
+
+        </div>
+    );
 }
 
 

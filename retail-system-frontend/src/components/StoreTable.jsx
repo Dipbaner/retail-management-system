@@ -1,7 +1,8 @@
 function StoreTable({
     stores,
     onEdit,
-    onDelete
+    onDelete,
+    deletingId
 }) {
 
     return (
@@ -14,37 +15,14 @@ function StoreTable({
 
                     <tr>
 
-                        <th>
-                            ID
-                        </th>
-
-                        <th>
-                            Store Name
-                        </th>
-
-                        <th>
-                            Address
-                        </th>
-
-                        <th>
-                            City
-                        </th>
-
-                        <th>
-                            State
-                        </th>
-
-                        <th>
-                            Phone
-                        </th>
-
-                        <th>
-                            Email
-                        </th>
-
-                        <th>
-                            Actions
-                        </th>
+                        <th>ID</th>
+                        <th>Store Name</th>
+                        <th>Address</th>
+                        <th>City</th>
+                        <th>State</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th>Actions</th>
 
                     </tr>
 
@@ -99,7 +77,12 @@ function StoreTable({
                                     <button
                                         type="button"
                                         className="btn btn-edit"
-                                        onClick={() => onEdit(store)}
+                                        onClick={() =>
+                                            onEdit(store)
+                                        }
+                                        disabled={
+                                            deletingId === store.id
+                                        }
                                     >
                                         Edit
                                     </button>
@@ -108,9 +91,19 @@ function StoreTable({
                                     <button
                                         type="button"
                                         className="btn btn-delete"
-                                        onClick={() => onDelete(store.id)}
+                                        onClick={() =>
+                                            onDelete(store.id)
+                                        }
+                                        disabled={
+                                            deletingId === store.id
+                                        }
                                     >
-                                        Delete
+
+                                        {deletingId === store.id
+                                            ? "Deleting..."
+                                            : "Delete"
+                                        }
+
                                     </button>
 
                                 </div>

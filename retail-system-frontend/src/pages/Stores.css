@@ -634,3 +634,142 @@
         font-size: 20px;
     }
 }
+
+/* =========================================================
+   FORM HEADER
+   ========================================================= */
+
+.form-header {
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.form-header h2 {
+    margin: 0 0 6px;
+
+    font-size: 24px;
+    font-weight: 700;
+
+    color: #111827;
+}
+
+.form-header p {
+    margin: 0;
+
+    font-size: 14px;
+
+    color: #6b7280;
+}
+
+
+/* =========================================================
+   REQUIRED FIELD
+   ========================================================= */
+
+.required {
+    margin-left: 3px;
+
+    color: #dc2626;
+}
+
+
+/* =========================================================
+   INPUT ERROR
+   ========================================================= */
+
+.form-group input.input-error {
+    border-color: #dc2626;
+
+    background-color: #fffafa;
+}
+
+.form-group input.input-error:focus {
+    border-color: #dc2626;
+
+    box-shadow:
+        0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+
+/* =========================================================
+   FIELD ERROR
+   ========================================================= */
+
+.field-error {
+    font-size: 12px;
+
+    color: #dc2626;
+
+    margin-top: -2px;
+}
+
+
+/* =========================================================
+   DISABLED INPUT
+   ========================================================= */
+
+.form-group input:disabled {
+    cursor: not-allowed;
+
+    background-color: #f3f4f6;
+
+    color: #6b7280;
+}
+
+
+/* =========================================================
+   DISABLED BUTTON
+   ========================================================= */
+
+.btn:disabled {
+    cursor: not-allowed;
+
+    opacity: 0.65;
+
+    transform: none;
+}
+
+
+/* =========================================================
+   BUTTON CONTENT
+   ========================================================= */
+
+.button-content {
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 8px;
+}
+
+
+/* =========================================================
+   LOADING SPINNER
+   ========================================================= */
+
+.spinner {
+    width: 14px;
+    height: 14px;
+
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #ffffff;
+
+    border-radius: 50%;
+
+    animation: spin 0.7s linear infinite;
+}
+
+
+@keyframes spin {
+
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+
+}
