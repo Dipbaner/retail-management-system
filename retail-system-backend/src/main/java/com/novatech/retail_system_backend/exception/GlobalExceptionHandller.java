@@ -7,6 +7,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,6 +45,9 @@ public class GlobalExceptionHandller {
         return ResponseEntity.badRequest().body(response);
     }
 
+    // GENERIC ERROR
+
+    @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneral(Exception ex) {
 
         Map<String, Object> response = new HashMap<>();
@@ -53,5 +57,34 @@ public class GlobalExceptionHandller {
         response.put("message", "An unexpected error occured");
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    // DUPLICATE RESOURCE
+
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<Map<String, Object>> handleDuplicateResource
+            (DuplicateResourceException exception) {
+        return buildResponse(HttpStatus.CONFLICT, exception.getMessage());
+    }
+
+    // INVALID DATA
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalArgument (
+            IllegalArgumentException exception) {
+        return buildResponse(HttpStatus.BAD_REQUEST, exception.getMessage());
+    }
+
+    // BUILD RESPONSE
+    private ResponseEntity<Map<String, Object>> buildResponse(
+            HttpStatus status, String message) {
+        Map<String, Object> response = new HashMap<>();
+
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", status.value());
+        response.put("error", status.getReasonPhrase());
+        response.put("message", message);
+
+        return ResponseEntity.status(status).body(response);
     }
 }

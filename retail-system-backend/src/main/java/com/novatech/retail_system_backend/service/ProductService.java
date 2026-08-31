@@ -1,7 +1,10 @@
 package com.novatech.retail_system_backend.service;
 
+import com.novatech.retail_system_backend.exception.DuplicateResourceException;
+import com.novatech.retail_system_backend.exception.ResourceNotFoundException;
 import com.novatech.retail_system_backend.model.Product;
 import com.novatech.retail_system_backend.repository.ProductRepository;
+import com.novatech.retail_system_backend.repository.StoreRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,8 +14,12 @@ public class ProductService {
 
     private final ProductRepository productRepository;
 
-    public ProductService(ProductRepository productRepository){
+    private final StoreRepository storeRepository;
+
+    public ProductService(ProductRepository productRepository,
+                          StoreRepository storeRepository){
         this.productRepository = productRepository;
+        this.storeRepository = storeRepository;
     }
 
     // GET ALL PRODUCTS
@@ -34,9 +41,10 @@ public class ProductService {
 
     public Product createProduct(Product product){
         validateProduct(product);
+        validateStore(product.getStoreId());
 
         if(productRepository.existsBySku(product.getSku())) {
-            throw new RuntimeException(
+            throw new DuplicateResourceException(
                     "Product with SKU already exists: " + product.getSku()
             );
         }
@@ -52,10 +60,11 @@ public class ProductService {
                 );
 
         validateProduct(updatedProduct);
+        validateStore(updatedProduct.getStoreId());
 
         if(!existingProduct.getSku().equals(updatedProduct.getSku())
         && productRepository.existsBySku(updatedProduct.getSku())) {
-            throw new RuntimeException(
+            throw new DuplicateResourceException(
                     "Product with SKU already exists: " +
                             updatedProduct.getSku()
             );
@@ -119,6 +128,21 @@ public class ProductService {
             throw new IllegalArgumentException("Store ID is required.");
         }
     }
+
+    private void validateStore(Long storeId){
+        if(storeId == null) {
+            throw new IllegalArgumentException(
+                    "Store ID is required."
+            );
+        }
+
+        if(!storeRepository.existsById(storeId)) {
+            throw new ResourceNotFoundException(
+                    "Store with id : "+ storeId + " not found."
+            );
+        }
+    }
+
 
 
 }
