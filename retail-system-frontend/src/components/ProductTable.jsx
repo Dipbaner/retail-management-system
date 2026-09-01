@@ -10,12 +10,47 @@ function ProductTable({
     const getStoreName = (storeId) => {
 
         const store = stores.find(
-            (item) => item.id === storeId
+            (item) =>
+                String(item.id) ===
+                String(storeId)
         );
 
         return store
             ? store.storeName
             : "Unknown Store";
+    };
+
+
+    const getStockStatus = (quantity) => {
+
+        const stock =
+            Number(quantity || 0);
+
+
+        if (stock === 0) {
+
+            return {
+                className: "stock-out",
+                text: "Out of Stock"
+            };
+
+        }
+
+
+        if (stock <= 10) {
+
+            return {
+                className: "stock-low",
+                text: "Low Stock"
+            };
+
+        }
+
+
+        return {
+            className: "stock-available",
+            text: "In Stock"
+        };
     };
 
 
@@ -39,7 +74,7 @@ function ProductTable({
 
                         <th>Price</th>
 
-                        <th>Quantity</th>
+                        <th>Stock</th>
 
                         <th>Store</th>
 
@@ -52,104 +87,155 @@ function ProductTable({
 
                 <tbody>
 
-                    {products.map((product) => (
+                    {products.map((product) => {
 
-                        <tr key={product.id}>
-
-                            <td>
-                                #{product.id}
-                            </td>
-
-
-                            <td className="product-name">
-
-                                {product.productName}
-
-                            </td>
+                        const stockStatus =
+                            getStockStatus(
+                                product.quantity
+                            );
 
 
-                            <td>
+                        return (
 
-                                <span className="sku-badge">
-                                    {product.sku}
-                                </span>
+                            <tr key={product.id}>
 
-                            </td>
-
-
-                            <td>
-                                {product.category}
-                            </td>
+                                <td>
+                                    #{product.id}
+                                </td>
 
 
-                            <td>
-                                ₹{Number(product.price).toFixed(2)}
-                            </td>
+                                <td>
+
+                                    <div className="product-name-cell">
+
+                                        <strong>
+                                            {product.productName}
+                                        </strong>
+
+                                        {product.description && (
+
+                                            <small>
+                                                {product.description}
+                                            </small>
+
+                                        )}
+
+                                    </div>
+
+                                </td>
 
 
-                            <td>
+                                <td>
 
-                                <span
-                                    className={
-                                        product.quantity === 0
-                                            ? "stock-empty"
-                                            : "stock-available"
-                                    }
-                                >
-                                    {product.quantity}
-                                </span>
+                                    <span className="sku-badge">
+                                        {product.sku}
+                                    </span>
 
-                            </td>
+                                </td>
 
 
-                            <td>
-                                {getStoreName(
-                                    product.storeId
-                                )}
-                            </td>
+                                <td>
+                                    {product.category}
+                                </td>
 
 
-                            <td>
+                                <td className="price-cell">
 
-                                <div className="product-actions">
-
-                                    <button
-                                        className="edit-btn"
-                                        onClick={() =>
-                                            onEdit(product)
+                                    ₹
+                                    {Number(
+                                        product.price || 0
+                                    ).toLocaleString(
+                                        "en-IN",
+                                        {
+                                            minimumFractionDigits: 2
                                         }
-                                        disabled={
-                                            deletingId === product.id
-                                        }
-                                    >
-                                        Edit
-                                    </button>
+                                    )}
+
+                                </td>
 
 
-                                    <button
-                                        className="delete-btn"
-                                        onClick={() =>
-                                            onDelete(product.id)
-                                        }
-                                        disabled={
-                                            deletingId === product.id
-                                        }
-                                    >
+                                <td>
 
-                                        {deletingId === product.id
-                                            ? "Deleting..."
-                                            : "Delete"
-                                        }
+                                    <div className="stock-cell">
 
-                                    </button>
+                                        <strong>
+                                            {product.quantity}
+                                        </strong>
 
-                                </div>
+                                        <span
+                                            className={
+                                                stockStatus.className
+                                            }
+                                        >
+                                            {stockStatus.text}
+                                        </span>
 
-                            </td>
+                                    </div>
 
-                        </tr>
+                                </td>
 
-                    ))}
+
+                                <td>
+
+                                    <span className="store-badge">
+
+                                        {getStoreName(
+                                            product.storeId
+                                        )}
+
+                                    </span>
+
+                                </td>
+
+
+                                <td>
+
+                                    <div className="product-actions">
+
+                                        <button
+                                            className="edit-btn"
+                                            onClick={() =>
+                                                onEdit(product)
+                                            }
+                                            disabled={
+                                                deletingId ===
+                                                product.id
+                                            }
+                                        >
+                                            Edit
+                                        </button>
+
+
+                                        <button
+                                            className="delete-btn"
+                                            onClick={() =>
+                                                onDelete(
+                                                    product.id
+                                                )
+                                            }
+                                            disabled={
+                                                deletingId ===
+                                                product.id
+                                            }
+                                        >
+
+                                            {deletingId ===
+                                            product.id
+                                                ? "Deleting..."
+                                                : "Delete"
+                                            }
+
+                                        </button>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                        );
+
+                    })}
 
                 </tbody>
 

@@ -1,15 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import { getProducts, createProduct, updateProduct, deleteProduct }
-    from "../services/productService";
+import {
+    getProducts,
+    createProduct,
+    updateProduct,
+    deleteProduct
+} from "../services/productService";
 
 import { getStores } from "../services/storeService";
 
 import ProductTable from "../components/ProductTable";
-
 import ProductForm from "../components/ProductForm";
 
 import "./Products.css";
+
 
 function Products() {
 
@@ -29,43 +33,23 @@ function Products() {
 
     const [deletingId, setDeletingId] = useState(null);
 
-    // LOAD PRODUCTS
 
-    const loadProducts = async () => {
-        try {
-            setLoading(true);
-            setError("");
-            const data = await getProducts();
-            setProducts(data);
-        }
-        catch (error) {
-            console.error("Load products error : ", error);
+    // ============================================
+    // SEARCH AND FILTER STATE
+    // ============================================
 
-            setError(error.response?.data?.message || "Failed to load products.");
+    const [searchTerm, setSearchTerm] = useState("");
 
-        }
-        finally {
-            setLoading(false);
-        }
-    };
+    const [selectedCategory, setSelectedCategory] =
+        useState("ALL");
 
-    // LOAD STORES
+    const [selectedStore, setSelectedStore] =
+        useState("ALL");
 
-    const loadStores = async () => {
 
-        try {
-            const data = await getStores();
-
-            setStores(data);
-        }
-        catch (error) {
-            console.error("Load stores error : ", error);
-
-            setError("Failed to load stores.");
-        }
-    };
-
-    // INITIAL LOAD
+    // ============================================
+    // LOAD INITIAL DATA
+    // ============================================
 
     useEffect(() => {
 
@@ -77,33 +61,46 @@ function Products() {
 
                 setError("");
 
-                const [productsData, storesData] = await Promise.all
-                    ([getProducts(), getStores()]);
+                const [
+                    productsData,
+                    storesData
+                ] = await Promise.all([
+                    getProducts(),
+                    getStores()
+                ]);
 
                 setProducts(productsData);
 
                 setStores(storesData);
-            }
 
-            catch (error) {
+            } catch (error) {
 
-                console.error("Load product page error : ", error);
+                console.error(
+                    "Load product page error:",
+                    error
+                );
 
-                setError(error.response?.data?.message ||
+                setError(
+                    error.response?.data?.message ||
                     "Failed to load product data."
                 );
-            }
 
-            finally {
+            } finally {
+
                 setLoading(false);
+
             }
         };
+
 
         loadInitialData();
 
     }, []);
 
-    // CREATE PRODUCT 
+
+    // ============================================
+    // CREATE PRODUCT
+    // ============================================
 
     const handleCreate = async (product) => {
 
@@ -113,30 +110,38 @@ function Products() {
 
             setSubmitting(true);
 
-            const newProduct = await createProduct(product);
+            const newProduct =
+                await createProduct(product);
 
             setProducts((previousProducts) => [
-                ...previousProducts, newProduct
+                ...previousProducts,
+                newProduct
             ]);
 
             setShowForm(false);
-        }
 
-        catch (error) {
-            console.error("Create product error : ", error);
+        } catch (error) {
 
-            setError(error.response?.data?.message ||
+            console.error(
+                "Create product error:",
+                error
+            );
+
+            setError(
+                error.response?.data?.message ||
                 "Failed to create product."
             );
 
-        }
+        } finally {
 
-        finally {
             setSubmitting(false);
         }
     };
 
-    // UPDATE PRODUCT 
+
+    // ============================================
+    // UPDATE PRODUCT
+    // ============================================
 
     const handleUpdate = async (product) => {
 
@@ -146,10 +151,11 @@ function Products() {
 
             setSubmitting(true);
 
-            const updatedProduct = await updateProduct(
-                editingProduct.id,
-                product
-            );
+            const updatedProduct =
+                await updateProduct(
+                    editingProduct.id,
+                    product
+                );
 
             setProducts((previousProducts) =>
                 previousProducts.map((item) =>
@@ -161,11 +167,12 @@ function Products() {
 
             setEditingProduct(null);
 
-            setShowForm(false);
-
         } catch (error) {
 
-            console.error("Update Product Error:", error);
+            console.error(
+                "Update product error:",
+                error
+            );
 
             setError(
                 error.response?.data?.message ||
@@ -178,7 +185,10 @@ function Products() {
         }
     };
 
-    // DELETE PRODUCT 
+
+    // ============================================
+    // DELETE PRODUCT
+    // ============================================
 
     const handleDelete = async (id) => {
 
@@ -224,11 +234,146 @@ function Products() {
         }
     };
 
-    // LOADING 
+
+    // ============================================
+    // GET UNIQUE CATEGORIES
+    // ============================================
+
+    const categories = useMemo(() => {
+
+        return [
+            ...new Set(
+                products
+                    .map(
+                        (product) =>
+                            product.category
+                    )
+                    .filter(Boolean)
+            )
+        ].sort();
+
+    }, [products]);
+
+
+    // ============================================
+    // FILTER PRODUCTS
+    // ============================================
+
+    const filteredProducts = useMemo(() => {
+
+        return products.filter((product) => {
+
+            const search =
+                searchTerm
+                    .trim()
+                    .toLowerCase();
+
+
+            const matchesSearch =
+                !search ||
+                product.productName
+                    ?.toLowerCase()
+                    .includes(search) ||
+                product.sku
+                    ?.toLowerCase()
+                    .includes(search) ||
+                product.category
+                    ?.toLowerCase()
+                    .includes(search);
+
+
+            const matchesCategory =
+                selectedCategory === "ALL" ||
+                product.category === selectedCategory;
+
+
+            const matchesStore =
+                selectedStore === "ALL" ||
+                String(product.storeId) ===
+                    String(selectedStore);
+
+
+            return (
+                matchesSearch &&
+                matchesCategory &&
+                matchesStore
+            );
+
+        });
+
+    }, [
+        products,
+        searchTerm,
+        selectedCategory,
+        selectedStore
+    ]);
+
+
+    // ============================================
+    // INVENTORY STATISTICS
+    // ============================================
+
+    const totalProducts =
+        products.length;
+
+
+    const totalQuantity =
+        products.reduce(
+            (total, product) =>
+                total +
+                Number(product.quantity || 0),
+            0
+        );
+
+
+    const totalInventoryValue =
+        products.reduce(
+            (total, product) =>
+                total +
+                (
+                    Number(product.price || 0) *
+                    Number(product.quantity || 0)
+                ),
+            0
+        );
+
+
+    const lowStockProducts =
+        products.filter(
+            (product) =>
+                Number(product.quantity || 0) > 0 &&
+                Number(product.quantity || 0) <= 10
+        ).length;
+
+
+    // ============================================
+    // CLEAR FILTERS
+    // ============================================
+
+    const clearFilters = () => {
+
+        setSearchTerm("");
+
+        setSelectedCategory("ALL");
+
+        setSelectedStore("ALL");
+    };
+
+
+    const filtersApplied =
+        searchTerm.trim() !== "" ||
+        selectedCategory !== "ALL" ||
+        selectedStore !== "ALL";
+
+
+    // ============================================
+    // LOADING
+    // ============================================
 
     if (loading) {
 
         return (
+
             <div className="products-page">
 
                 <div className="products-loading">
@@ -245,7 +390,10 @@ function Products() {
         );
     }
 
+
+    // ============================================
     // RENDER
+    // ============================================
 
     return (
 
@@ -253,9 +401,10 @@ function Products() {
 
             <div className="products-container">
 
-                {/* ====================================
+
+                {/* ==================================
                     HEADER
-                   ==================================== */}
+                   ================================== */}
 
                 <div className="products-header">
 
@@ -267,6 +416,7 @@ function Products() {
 
                         <p>
                             Manage your retail products
+                            and inventory.
                         </p>
 
                     </div>
@@ -275,48 +425,156 @@ function Products() {
                     {!showForm &&
                         !editingProduct && (
 
-                            <button
-                                className="add-product-btn"
-                                onClick={() => {
+                        <button
+                            className="add-product-btn"
+                            onClick={() => {
 
-                                    setError("");
+                                setError("");
 
-                                    setEditingProduct(null);
+                                setEditingProduct(null);
 
-                                    setShowForm(true);
+                                setShowForm(true);
 
-                                }}
-                            >
-                                + Add Product
-                            </button>
+                            }}
+                        >
+                            + Add Product
+                        </button>
 
-                        )}
+                    )}
 
                 </div>
 
 
-                {/* ====================================
+                {/* ==================================
                     ERROR
-                   ==================================== */}
+                   ================================== */}
 
                 {error && (
 
                     <div className="error-message">
 
-                        {error}
+                        <span>
+                            {error}
+                        </span>
 
                     </div>
 
                 )}
 
 
-                {/* ====================================
+                {/* ==================================
+                    STATISTICS
+                   ================================== */}
+
+                {!showForm &&
+                    !editingProduct && (
+
+                    <div className="product-stats">
+
+
+                        <div className="stat-card">
+
+                            <div className="stat-icon">
+                                📦
+                            </div>
+
+                            <div>
+
+                                <p>
+                                    Total Products
+                                </p>
+
+                                <h3>
+                                    {totalProducts}
+                                </h3>
+
+                            </div>
+
+                        </div>
+
+
+                        <div className="stat-card">
+
+                            <div className="stat-icon">
+                                🏷️
+                            </div>
+
+                            <div>
+
+                                <p>
+                                    Total Stock
+                                </p>
+
+                                <h3>
+                                    {totalQuantity}
+                                </h3>
+
+                            </div>
+
+                        </div>
+
+
+                        <div className="stat-card">
+
+                            <div className="stat-icon">
+                                💰
+                            </div>
+
+                            <div>
+
+                                <p>
+                                    Inventory Value
+                                </p>
+
+                                <h3>
+                                    ₹
+                                    {totalInventoryValue.toLocaleString(
+                                        "en-IN",
+                                        {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2
+                                        }
+                                    )}
+                                </h3>
+
+                            </div>
+
+                        </div>
+
+
+                        <div className="stat-card warning">
+
+                            <div className="stat-icon">
+                                ⚠️
+                            </div>
+
+                            <div>
+
+                                <p>
+                                    Low Stock
+                                </p>
+
+                                <h3>
+                                    {lowStockProducts}
+                                </h3>
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+                )}
+
+
+                {/* ==================================
                     PRODUCT FORM
-                   ==================================== */}
+                   ================================== */}
 
                 {(showForm || editingProduct) && (
 
                     <ProductForm
+
                         initialData={
                             editingProduct
                         }
@@ -340,38 +598,189 @@ function Products() {
                         }}
 
                         submitting={submitting}
+
                     />
 
                 )}
 
 
-                {/* ====================================
-                    PRODUCT TABLE
-                   ==================================== */}
+                {/* ==================================
+                    SEARCH / FILTERS
+                   ================================== */}
 
                 {!showForm &&
                     !editingProduct && (
 
-                        products.length === 0 ? (
+                    <div className="product-filters">
 
-                            <div className="empty-products">
 
-                                <h2>
-                                    No Products Found
-                                </h2>
+                        <div className="search-box">
 
-                                <p>
-                                    Start by adding your
-                                    first product.
-                                </p>
+                            <span>
+                                🔍
+                            </span>
 
+                            <input
+                                type="text"
+                                placeholder="Search by name, SKU or category..."
+                                value={searchTerm}
+                                onChange={(event) =>
+                                    setSearchTerm(
+                                        event.target.value
+                                    )
+                                }
+                            />
+
+                        </div>
+
+
+                        <select
+                            value={selectedCategory}
+                            onChange={(event) =>
+                                setSelectedCategory(
+                                    event.target.value
+                                )
+                            }
+                        >
+
+                            <option value="ALL">
+                                All Categories
+                            </option>
+
+                            {categories.map(
+                                (category) => (
+
+                                <option
+                                    key={category}
+                                    value={category}
+                                >
+                                    {category}
+                                </option>
+
+                            ))}
+
+                        </select>
+
+
+                        <select
+                            value={selectedStore}
+                            onChange={(event) =>
+                                setSelectedStore(
+                                    event.target.value
+                                )
+                            }
+                        >
+
+                            <option value="ALL">
+                                All Stores
+                            </option>
+
+                            {stores.map((store) => (
+
+                                <option
+                                    key={store.id}
+                                    value={store.id}
+                                >
+                                    {store.storeName}
+                                </option>
+
+                            ))}
+
+                        </select>
+
+
+                        {filtersApplied && (
+
+                            <button
+                                className="clear-filter-btn"
+                                onClick={clearFilters}
+                            >
+                                Clear
+                            </button>
+
+                        )}
+
+                    </div>
+
+                )}
+
+
+                {/* ==================================
+                    TABLE / EMPTY STATE
+                   ================================== */}
+
+                {!showForm &&
+                    !editingProduct && (
+
+                    filteredProducts.length === 0 ? (
+
+                        <div className="empty-products">
+
+                            <div className="empty-icon">
+                                📦
                             </div>
 
-                        ) : (
+                            <h2>
+                                {filtersApplied
+                                    ? "No Matching Products"
+                                    : "No Products Found"
+                                }
+                            </h2>
+
+                            <p>
+
+                                {filtersApplied
+                                    ? "Try changing your search or filters."
+                                    : "Start by adding your first product."
+                                }
+
+                            </p>
+
+
+                            {filtersApplied && (
+
+                                <button
+                                    className="clear-empty-btn"
+                                    onClick={clearFilters}
+                                >
+                                    Clear Filters
+                                </button>
+
+                            )}
+
+                        </div>
+
+                    ) : (
+
+                        <>
+
+                            {filtersApplied && (
+
+                                <div className="results-info">
+
+                                    Showing{" "}
+                                    <strong>
+                                        {filteredProducts.length}
+                                    </strong>{" "}
+                                    of{" "}
+                                    <strong>
+                                        {products.length}
+                                    </strong>{" "}
+                                    products
+
+                                </div>
+
+                            )}
+
 
                             <ProductTable
-                                products={products}
+
+                                products={
+                                    filteredProducts
+                                }
+
                                 stores={stores}
+
                                 onEdit={(product) => {
 
                                     setError("");
@@ -383,17 +792,28 @@ function Products() {
                                     );
 
                                 }}
-                                onDelete={handleDelete}
-                                deletingId={deletingId}
+
+                                onDelete={
+                                    handleDelete
+                                }
+
+                                deletingId={
+                                    deletingId
+                                }
+
                             />
 
-                        )
-                    )}
+                        </>
+
+                    )
+
+                )}
 
             </div>
 
         </div>
     );
 }
+
 
 export default Products;
