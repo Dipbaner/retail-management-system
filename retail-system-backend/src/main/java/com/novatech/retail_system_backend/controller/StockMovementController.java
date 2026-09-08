@@ -26,6 +26,14 @@ public class StockMovementController {
     public ResponseEntity<StockMovement> createMovement(
             @RequestBody StockMovementRequest request) {
         System.out.println("stock movement create request.");
+
+        System.out.println("========== STOCK MOVEMENT REQUEST ==========");
+        System.out.println("Product ID: " + request.getProductId());
+        System.out.println("Type: " + request.getType());
+        System.out.println("Quantity: " + request.getQuantity());
+        System.out.println("Reason: " + request.getReason());
+        System.out.println("============================================");
+
         StockMovement movement = stockMovementService
                 .createMovement(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(movement);
