@@ -1,6 +1,6 @@
 function InventoryTable({
-    movements,
-    products
+    movements = [],
+    products = []
 }) {
 
 
@@ -70,15 +70,10 @@ function InventoryTable({
                     <tr>
 
                         <th>ID</th>
-
                         <th>Date</th>
-
                         <th>Product</th>
-
                         <th>Type</th>
-
                         <th>Quantity</th>
-
                         <th>Reason</th>
 
                     </tr>
@@ -91,6 +86,7 @@ function InventoryTable({
                     {movements.map((movement) => (
 
                         <tr key={movement.id}>
+
 
                             <td>
                                 #{movement.id}
@@ -105,25 +101,31 @@ function InventoryTable({
 
 
                             <td>
+
                                 <strong>
+
                                     {getProductName(
                                         movement.productId
                                     )}
+
                                 </strong>
+
                             </td>
 
+
+                            {/* TYPE */}
 
                             <td>
 
                                 <span
                                     className={
-                                        movement.type === "IN"
+                                        movement.type === "STOCK_IN"
                                             ? "movement-badge movement-in"
                                             : "movement-badge movement-out"
                                     }
                                 >
 
-                                    {movement.type === "IN"
+                                    {movement.type === "STOCK_IN"
                                         ? "↑ Stock In"
                                         : "↓ Stock Out"
                                     }
@@ -133,22 +135,26 @@ function InventoryTable({
                             </td>
 
 
+                            {/* QUANTITY */}
+
                             <td>
 
                                 <strong
                                     className={
-                                        movement.type === "IN"
+                                        movement.type === "STOCK_IN"
                                             ? "quantity-in"
                                             : "quantity-out"
                                     }
                                 >
 
-                                    {movement.type === "IN"
+                                    {movement.type === "STOCK_IN"
                                         ? "+"
                                         : "-"
                                     }
 
-                                    {movement.quantity}
+                                    {Math.abs(
+                                        movement.quantity
+                                    )}
 
                                 </strong>
 
@@ -158,6 +164,7 @@ function InventoryTable({
                             <td>
                                 {movement.reason || "-"}
                             </td>
+
 
                         </tr>
 

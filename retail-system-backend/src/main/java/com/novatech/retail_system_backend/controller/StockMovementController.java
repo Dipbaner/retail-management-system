@@ -3,6 +3,7 @@ package com.novatech.retail_system_backend.controller;
 import com.novatech.retail_system_backend.dto.StockMovementRequest;
 import com.novatech.retail_system_backend.model.StockMovement;
 import com.novatech.retail_system_backend.service.StockMovementService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,22 +18,13 @@ public class StockMovementController {
     private final StockMovementService stockMovementService;
 
     public StockMovementController(StockMovementService stockMovementService){
-        System.out.println("Controller Executing.");
         this.stockMovementService = stockMovementService;
     }
 
     // CREATE STOCK MOVEMENT
     @PostMapping("/movements")
     public ResponseEntity<StockMovement> createMovement(
-            @RequestBody StockMovementRequest request) {
-        System.out.println("stock movement create request.");
-
-        System.out.println("========== STOCK MOVEMENT REQUEST ==========");
-        System.out.println("Product ID: " + request.getProductId());
-        System.out.println("Type: " + request.getType());
-        System.out.println("Quantity: " + request.getQuantity());
-        System.out.println("Reason: " + request.getReason());
-        System.out.println("============================================");
+            @Valid @RequestBody StockMovementRequest request) {
 
         StockMovement movement = stockMovementService
                 .createMovement(request);

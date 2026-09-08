@@ -1,6 +1,9 @@
 package com.novatech.retail_system_backend.service;
 
 import com.novatech.retail_system_backend.dto.StockMovementRequest;
+import com.novatech.retail_system_backend.exception.InsufficientStockException;
+import com.novatech.retail_system_backend.exception.InvalidStockMovementException;
+import com.novatech.retail_system_backend.exception.ProductNotFoundException;
 import com.novatech.retail_system_backend.model.Product;
 import com.novatech.retail_system_backend.model.StockMovement;
 import com.novatech.retail_system_backend.repository.ProductRepository;
@@ -30,22 +33,22 @@ public class StockMovementService {
 
         // Validation
         if (request.getProductId() == null) {
-            throw new RuntimeException("Product ID is required");
+            throw new InvalidStockMovementException("Product ID is required");
         }
 
         if (request.getType() == null) {
-            throw new RuntimeException("Stock movement type is required");
+            throw new InvalidStockMovementException("Stock movement type is required");
         }
 
         if (request.getQuantity() == null || request.getQuantity() <= 0) {
-            throw new RuntimeException("Quantity must be greater than 0");
+            throw new InvalidStockMovementException("Quantity must be greater than 0");
         }
 
 
         // Find product
         Product product = productRepository.findById(request.getProductId())
                 .orElseThrow(() ->
-                        new RuntimeException("Product not found")
+                        new ProductNotFoundException(request.getProductId())
                 );
 
 
@@ -70,7 +73,8 @@ public class StockMovementService {
         else {
 
             if (movementQuantity > quantityBefore) {
-                throw new RuntimeException("Insufficient stock");
+                throw new InsufficientStockException(quantityBefore,
+                        movementQuantity);
             }
 
             quantityAfter = quantityBefore - movementQuantity;
