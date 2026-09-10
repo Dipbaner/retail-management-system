@@ -78,4 +78,25 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    @ExceptionHandler(CustomerNotFoundException.class)
+    public ResponseEntity<ApiError> handleCustomerNotFound(
+            CustomerNotFoundException ex
+    ) {
+        ApiError error = new ApiError(
+                HttpStatus.NOT_FOUND.value(),
+                ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiError> handleIllegalArgument(
+            IllegalArgumentException ex
+    ) {
+        ApiError error = new ApiError(
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage()
+        );
+        return ResponseEntity.badRequest().body(error);
+    }
 }
