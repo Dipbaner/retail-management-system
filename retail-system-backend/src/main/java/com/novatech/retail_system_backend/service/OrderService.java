@@ -31,17 +31,24 @@ public class OrderService {
     @Transactional
     public Order createOrder(OrderRequest request) {
 
-        // VERIFY CUSTOMER EXISTS
+        // ==========================================
+        // 1. VERIFY CUSTOMER EXISTS
+        // ==========================================
+
         if (!customerRepository.existsById(request.getCustomerId())) {
             throw new IllegalArgumentException(
                     "Customer not found with id : " + request.getCustomerId()
             );
         }
 
-        // Prevent duplicate products in same order
+        // ==========================================
+        // 2. PREVENT DUPLICATE PRODUCTS
+        // ==========================================
+
         Set<Long> productIds = new HashSet<>();
 
         for (OrderItemRequest item : request.getItems()) {
+
             if (!productIds.add(item.getProductId())) {
                 throw new IllegalArgumentException(
                         "Product appears more than once in the order : "
@@ -50,76 +57,173 @@ public class OrderService {
             }
         }
 
-        // CREATE ORDER
+        // ==========================================
+        // 3. CREATE ORDER
+        // ==========================================
+
         Order order = new Order();
 
         order.setCustomerId(request.getCustomerId());
-        order.setStatus(OrderStatus.COMPLETED);
+        order.setStatus(OrderStatus.PENDING);
         order.setCreatedAt(LocalDateTime.now());
-        order.setTotalAmount(BigDecimal.ZERO);
 
-        Order savedOrder = orderRepository.save(order);
+        BigDecimal subtotal = BigDecimal.ZERO;
 
-        BigDecimal totalAmount = BigDecimal.ZERO;
+        BigDecimal discount = request.getDiscount();
 
-        // Process every product
+        if (discount == null) {
+            discount = BigDecimal.ZERO;
+        }
+
+        // ==========================================
+        // 4. PROCESS ORDER ITEMS
+        // ==========================================
 
         for (OrderItemRequest itemRequest : request.getItems()) {
 
             Product product = productRepository.findById(
                     itemRequest.getProductId()
             ).orElseThrow(() -> new IllegalArgumentException(
-                    "Product not found with id : " +
-                            itemRequest.getProductId()
+                    "Product not found with id : "
+                            + itemRequest.getProductId()
             ));
 
-            // Calculate subtotal
+            // ======================================
+            // CHECK STOCK
+            // ======================================
+
+            if (product.getQuantity() < itemRequest.getQuantity()) {
+
+                throw new IllegalArgumentException(
+                        "Insufficient stock for product : "
+                                + product.getProductName()
+                );
+            }
+
+            // ======================================
+            // CALCULATE ITEM TOTAL
+            // ======================================
+
             BigDecimal unitPrice = product.getPrice();
 
-            BigDecimal subtotal = unitPrice.multiply(
+            BigDecimal itemTotal = unitPrice.multiply(
                     BigDecimal.valueOf(itemRequest.getQuantity())
             );
 
-            // Reduce Inventory
-            StockMovementRequest movementRequest =
-                    new StockMovementRequest();
+            subtotal = subtotal.add(itemTotal);
 
-            movementRequest.setProductId(product.getId());
-            movementRequest.setType(StockMovement.MovementType.STOCK_OUT);
-            movementRequest.setQuantity(itemRequest.getQuantity());
-            movementRequest.setReason("Sale - Order #" + savedOrder.getId());
+            // ======================================
+            // CREATE ORDER ITEM
+            // ======================================
 
-            stockMovementService.createMovement(movementRequest);
-
-            // CREATE ORDER ITEMS
             OrderItem orderItem = new OrderItem();
 
-            orderItem.setOrderId(savedOrder.getId());
             orderItem.setProductId(product.getId());
             orderItem.setQuantity(itemRequest.getQuantity());
             orderItem.setUnitPrice(unitPrice);
-            orderItem.setSubTotal(subtotal);
+            orderItem.setTotalPrice(itemTotal);
 
-            orderItemRepository.save(orderItem);
+            // VERY IMPORTANT
+            orderItem.setOrder(order);
 
-            // ADD TO TOTAL
-            totalAmount = totalAmount.add(subtotal);
+            // Add item to order
+            order.getItems().add(orderItem);
         }
-        savedOrder.setTotalAmount(totalAmount);
+
+        // ==========================================
+        // 5. VALIDATE DISCOUNT
+        // ==========================================
+
+        if (discount.compareTo(subtotal) > 0) {
+
+            throw new IllegalArgumentException(
+                    "Discount cannot be greater than subtotal"
+            );
+        }
+
+        // ==========================================
+        // 6. CALCULATE FINAL TOTAL
+        // ==========================================
+
+        BigDecimal totalAmount = subtotal.subtract(discount);
+
+        // ==========================================
+        // 7. SET ORDER AMOUNTS
+        // ==========================================
+
+        order.setSubtotal(subtotal);
+        order.setDiscount(discount);
+        order.setTotalAmount(totalAmount);
+
+        // ==========================================
+        // 8. SAVE ORDER
+        // ==========================================
+
+        Order savedOrder = orderRepository.save(order);
+
+        // ==========================================
+        // 9. REDUCE INVENTORY
+        // ==========================================
+
+        for (OrderItem item : savedOrder.getItems()) {
+
+            StockMovementRequest movementRequest =
+                    new StockMovementRequest();
+
+            movementRequest.setProductId(item.getProductId());
+
+            movementRequest.setType(
+                    StockMovement.MovementType.STOCK_OUT
+            );
+
+            movementRequest.setQuantity(
+                    item.getQuantity()
+            );
+
+            movementRequest.setReason(
+                    "Sale - Order #" + savedOrder.getId()
+            );
+
+            stockMovementService.createMovement(
+                    movementRequest
+            );
+        }
+
+        // ==========================================
+        // 10. MARK ORDER COMPLETED
+        // ==========================================
+
+        savedOrder.setStatus(OrderStatus.COMPLETED);
+
         return orderRepository.save(savedOrder);
     }
 
+    // ==============================================
+    // GET ALL ORDERS
+    // ==============================================
+
     public List<Order> getAllOrders() {
+
         return orderRepository.findAllByOrderByCreatedAtDesc();
     }
 
+    // ==============================================
+    // GET ORDER BY ID
+    // ==============================================
+
     public Order getOrderById(Long id) {
+
         return orderRepository.findById(id)
-                .orElseThrow( () ->
+                .orElseThrow(() ->
                         new IllegalArgumentException(
-                                "Order not found with id : " +id
-                        ));
+                                "Order not found with id : " + id
+                        )
+                );
     }
+
+    // ==============================================
+    // GET ORDER ITEMS
+    // ==============================================
 
     public List<OrderItem> getOrderItems(Long orderId) {
 
@@ -129,13 +233,20 @@ public class OrderService {
         return orderItemRepository.findByOrderId(orderId);
     }
 
+    // ==============================================
+    // GET ORDERS BY CUSTOMER
+    // ==============================================
+
     public List<Order> getOrdersByCustomer(Long customerId) {
-        if(!customerRepository.existsById(customerId)) {
+
+        if (!customerRepository.existsById(customerId)) {
+
             throw new IllegalArgumentException(
-                    "Customer not found with id : "+customerId
+                    "Customer not found with id : " + customerId
             );
         }
-        return orderRepository.findByCustomerIdOrderByCreatedAtDesc(customerId);
-    }
 
+        return orderRepository
+                .findByCustomerIdOrderByCreatedAtDesc(customerId);
+    }
 }

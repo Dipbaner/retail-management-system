@@ -1,0 +1,303 @@
+/* ==========================================================
+   Customer directory — enterprise console styling
+   Design tokens are scoped to .customers-page so they never
+   leak into the rest of the app.
+   ========================================================== */
+
+.customers-page {
+    --cx-canvas: #f5f6f8;
+    --cx-surface: #ffffff;
+    --cx-ink: #12161c;
+    --cx-ink-soft: #5b6472;
+    --cx-ink-faint: #8a93a3;
+    --cx-line: #e2e5ea;
+    --cx-line-strong: #cdd2da;
+    --cx-accent: #2954c8;
+    --cx-accent-hover: #1f45ab;
+    --cx-accent-soft: #eaf0fd;
+    --cx-danger: #b3261e;
+    --cx-danger-bg: #fbeaea;
+    --cx-danger-line: #f1c9c6;
+    --cx-radius: 10px;
+    --cx-radius-sm: 7px;
+    --cx-font-ui: "Public Sans", "Segoe UI", system-ui,
+        -apple-system, sans-serif;
+    --cx-font-mono: "IBM Plex Mono", "SFMono-Regular",
+        Menlo, monospace;
+
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 28px 56px;
+    box-sizing: border-box;
+    background: var(--cx-canvas);
+    font-family: var(--cx-font-ui);
+    color: var(--cx-ink);
+    -webkit-font-smoothing: antialiased;
+}
+
+.customers-page *,
+.customers-page *::before,
+.customers-page *::after {
+    box-sizing: border-box;
+}
+
+.customers-page :focus-visible {
+    outline: 2px solid var(--cx-accent);
+    outline-offset: 2px;
+}
+
+/* ---------- Header ---------- */
+
+.cx-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 20px;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--cx-line);
+}
+
+.cx-header__text h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+}
+
+.cx-header__text p {
+    margin: 6px 0 0;
+    font-size: 14px;
+    color: var(--cx-ink-soft);
+    max-width: 46ch;
+}
+
+/* ---------- Buttons ---------- */
+
+.cx-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 16px;
+    border-radius: var(--cx-radius-sm);
+    border: 1px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 120ms ease,
+        border-color 120ms ease;
+}
+
+.cx-btn--primary {
+    background: var(--cx-accent);
+    color: #ffffff;
+}
+
+.cx-btn--primary:hover {
+    background: var(--cx-accent-hover);
+}
+
+.cx-btn--primary svg {
+    flex-shrink: 0;
+}
+
+/* ---------- Alert ---------- */
+
+.cx-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    margin-bottom: 20px;
+    border-radius: var(--cx-radius-sm);
+    background: var(--cx-danger-bg);
+    border: 1px solid var(--cx-danger-line);
+    color: var(--cx-danger);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.cx-alert svg {
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+/* ---------- Toolbar: search + counts ---------- */
+
+.cx-toolbar {
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.cx-search {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--cx-surface);
+    border: 1px solid var(--cx-line);
+    border-radius: var(--cx-radius-sm);
+    padding: 0 14px;
+    color: var(--cx-ink-faint);
+    transition: border-color 120ms ease;
+}
+
+.cx-search:focus-within {
+    border-color: var(--cx-accent);
+    color: var(--cx-ink-soft);
+}
+
+.cx-search svg {
+    flex-shrink: 0;
+}
+
+.cx-search input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 11px 0;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--cx-ink);
+}
+
+.cx-search input::placeholder {
+    color: var(--cx-ink-faint);
+}
+
+.cx-counts {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: stretch;
+    background: var(--cx-surface);
+    border: 1px solid var(--cx-line);
+    border-radius: var(--cx-radius-sm);
+    overflow: hidden;
+}
+
+.cx-counts__item {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    padding: 8px 20px;
+    min-width: 92px;
+}
+
+.cx-counts__item span {
+    font-size: 11.5px;
+    color: var(--cx-ink-soft);
+}
+
+.cx-counts__item strong {
+    font-family: var(--cx-font-mono);
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+.cx-counts__divider {
+    width: 1px;
+    background: var(--cx-line);
+    margin: 10px 0;
+}
+
+/* ---------- Table panel ---------- */
+
+.cx-panel {
+    background: var(--cx-surface);
+    border: 1px solid var(--cx-line);
+    border-radius: var(--cx-radius);
+    overflow: hidden;
+}
+
+/* ---------- States: loading / empty / no-results ---------- */
+
+.cx-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-align: center;
+    padding: 72px 24px;
+    color: var(--cx-ink-soft);
+    font-size: 14px;
+}
+
+.cx-state__title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--cx-ink);
+}
+
+.cx-state .cx-btn {
+    margin-top: 10px;
+}
+
+.cx-spinner {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2.5px solid var(--cx-line-strong);
+    border-top-color: var(--cx-accent);
+    animation: cx-spin 700ms linear infinite;
+    margin-bottom: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cx-spinner {
+        animation-duration: 1400ms;
+    }
+}
+
+@keyframes cx-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 760px) {
+
+    .customers-page {
+        padding: 20px 16px 40px;
+    }
+
+    .cx-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+    }
+
+    .cx-header__text h1 {
+        font-size: 21px;
+    }
+
+    .cx-btn--primary {
+        justify-content: center;
+    }
+
+    .cx-toolbar {
+        flex-direction: column;
+    }
+
+    .cx-counts {
+        align-self: stretch;
+    }
+
+    .cx-counts__item {
+        flex: 1;
+        min-width: 0;
+        align-items: center;
+        text-align: center;
+    }
+}

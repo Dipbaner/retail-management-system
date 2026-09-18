@@ -1,5 +1,6 @@
 package com.novatech.retail_system_backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,9 +17,6 @@ public class OrderItem {
     private Long id;
 
     @Column(nullable = false)
-    private Long orderId;
-
-    @Column(nullable = false)
     private Long productId;
 
     @Column(nullable = false)
@@ -28,20 +26,14 @@ public class OrderItem {
     private BigDecimal unitPrice;
 
     @Column(nullable = false, precision = 12, scale = 2)
-    private BigDecimal subTotal;
+    private BigDecimal totalPrice;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false)
+    @JsonIgnore
+    private Order order;
 
     public OrderItem() {
 
-    }
-
-    public OrderItem(
-            Long orderId, Long productId, Integer quantity,
-            BigDecimal unitPrice, BigDecimal subTotal
-    ) {
-        this.orderId = orderId;
-        this.productId = productId;
-        this.quantity = quantity;
-        this.unitPrice = unitPrice;
-        this.subTotal = subTotal;
     }
 }
